@@ -1,7 +1,7 @@
 import talib
 import tushare as ts
 import pandas as pd
-
+from matplotlib import pyplot as plt
 #文档地址
 #https://mrjbq7.github.io/ta-lib/
 #github 文档中文翻译地址
@@ -11,9 +11,10 @@ ts.set_token("ca9a880eb55cf5479fe8b021615f26d1a59c6f187e9d008a817c4ae0")
 
 #准备K线数据
 api = ts.pro_api()
-klines = api.daily(ts_code='000001.SZ', start_date='2020-01-01')
-klines = klines.sort_values('trade_date',ascending=True)
-klines.index = pd.to_datetime(klines.trade_date)
+data_table = api.daily(ts_code='000001.SZ', start_date='2020-01-01')
+data_table = data_table.sort_values('trade_date',ascending=True)
+data_table.index = pd.to_datetime(data_table.trade_date)
+
 
 def talib_describe():
     # print(talib.get_functions())
@@ -24,45 +25,57 @@ def talib_describe():
 
 
 def Overlap_test():
-    ma5 = talib.MA(klines.close, timeperiod=5)
-    print(ma5)
-    sma = talib.SMA(klines.close)
-    print(sma)
-    kama = talib.KAMA(klines.close, timeperiod=30)
-    print(kama)
+    data_table["MA5"] = talib.MA(data_table.close, timeperiod=5)
+    print(data_table["MA5"])
+    data_table["SMA"] = talib.SMA(data_table.close)
+    print(data_table["SMA"])
+    #考夫曼的自适应移动平均线
+    data_table["KAMA"] = talib.KAMA(data_table.close, timeperiod=30)
+    print(data_table["KAMA"])
+
+    data_table["BBANDS_upper"], data_table["BBANDS_middle"], data_table["BBANDS_lower"] = talib.BBANDS(
+        data_table.close, matype= talib.MA_Type.T3)
 
 
+    plt.figure(1)
+    plt.plot(data_table.index,data_table.close,label = 'close')
+    plt.plot(data_table.index,data_table["MA5"],label = 'MA5')
+    plt.plot(data_table.index,data_table["MA5"],label = 'MA5')
+    plt.legend(loc='upper middle')
+    plt.show()
 
+
+#波动率
 def Volatility_test():
-    atr = talib.ATR(klines.high, klines.low, klines.close, timeperiod=14)
-    print(atr)
-    #归一化波动幅度均值
-    nart = talib.NATR(klines.high, klines.low, klines.close, timeperiod=14)
-    print(atr)
+    #真实波动幅度
+    data_table["TRANGE"] = talib.TRANGE(data_table.high, data_table.low, data_table.close)
+    #真实波动幅度均值
+    data_table["ATR"] = talib.ATR(data_table.high, data_table.low, data_table.close, timeperiod=14)
+    print(data_table["ATR"])
 
 def Momentum_test():
-    cci = talib.CCI(klines.high, klines.low, klines.close, timeperiod=14)
+    data_table["CCI"] = talib.CCI(data_table.high, data_table.low, data_table.close, timeperiod=14)
 
-    macd, macdsignal, macdhist = talib.MACD(klines.close, fastperiod=12, slowperiod=26, signalperiod=9)
+    data_table["MACD"],data_table["SIGNAL"],data_table["HIST"] = talib.MACD(data_table.close, fastperiod=12, slowperiod=26, signalperiod=9)
 
-    rsi = talib.RSI(klines.close, timeperiod=14)
+    data_table["RSI"] = talib.RSI(data_table.close, timeperiod=14)
 
 def Other_test():
-    avg = talib.AVGPRICE(klines.close)
-    print(avg)
-    med = talib.MEDPIRCE(klines.close)
-    print(med)
-    beta = talib.BETA(klines.high, klines.low, timeperiod=4)
+    data_table["AVGPRICE"] = talib.AVGPRICE(data_table.close)
+    print(data_table["AVGPRICE"])
+    data_table["MEDPIRCE"] = talib.MEDPIRCE(data_table.close)
+    print(data_table["MEDPIRCE"])
+    data_table["BETA"] = talib.BETA(data_table.high, data_table.low, timeperiod=4)
 
-    var = talib.VAR(klines.close, timeperiod=5, nbdev=1)
+    data_table["VAR"] = talib.VAR(data_table.close, timeperiod=5, nbdev=1)
 
 
 def main():
     #talib_describe()
-    #Overlap_test()
-    Volatility_test()
-    Momentum_test()
-    Other_test()
+    Overlap_test()
+    #Volatility_test()
+    #Momentum_test()
+    #Other_test()
 
 if __name__ == '__main__':
     main()
