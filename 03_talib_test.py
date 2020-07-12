@@ -61,6 +61,8 @@ def main():
     #talib_describe()
     #Overlap_test()
     Volatility_test()
+    Momentum_test()
+    Other_test()
 
 if __name__ == '__main__':
     main()
